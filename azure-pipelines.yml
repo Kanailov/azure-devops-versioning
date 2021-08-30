@@ -95,4 +95,4 @@ steps:
          
           git branch -d DevOps/test_$(Build.BuildNumber)
 
-          git push https://kanailov@gmail.com:$(AntonKPATGH)@github.com/Kanailov/azure-devops-versioning.git main --quiet
+          git push https://kanailov:$(AntonKPATGH)@github.com/Kanailov/azure-devops-versioning.git main --quiet
