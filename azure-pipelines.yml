@@ -44,26 +44,26 @@ steps:
               $str -match ('(<AssemblyVersion>)(.+)(</AssemblyVersion>)$') # creating array of version parts
               $ver = $matches[2].split('.') # removing dots
               $ver[3] = ([int]$ver[3] + 1) # incrementing by 1
-              $newVerStr = $ver -join '.' # bringin dots back
+              $newVerStr = $ver -join '.' # bringing dots back
               $newStr = '{0}{1}{2}' -f $matches[1], $newVerStr, $matches[3] # gathering back version parts
               
               for ($i=1; $i -le $firstAssemblyIndex; $i++){ # adding back spaces 
               $newStr = '{0}{1}' -f (' '), $newStr
               }
-              Write-Host $newStr
+              Write-Host $newStr        # showing new version number to console
               
-              (Get-Content $projectName) -replace $str,$newStr | Set-Content $projectName
+              (Get-Content $projectName) -replace $str,$newStr | Set-Content $projectName       # replacing version string in AssemblyVersion file
             }
             else
             {
-              $str
+              $str      # did not find AssemblyVersion - line remains unchanged
             }
           }
 
-          git config user.email "azure.agent@profinfotech.ru" 
+          git config user.email "azure.agent@profinfotech.ru"
           git config user.name "Azure Agent"
-          git add $projectName 
-          git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"
+          git add $projectName                  # indexing changed file
+          git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"         # commiting changed file with the comment
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
@@ -77,11 +77,11 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-          git checkout main --quiet
-          git pull --quiet
+          git checkout main --quiet         # switching to main
+          git pull --quiet                  # getting fresh version of main
 
-          git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr" --quiet
+          git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr" --quiet     # merging local branch with main
          
-          git branch -d DevOps/test_$(Build.BuildNumber)
+          git branch -d DevOps/test_$(Build.BuildNumber)    # deleting local branch
 
-          git push https://kanailov:$(PAToken)@github.com/Kanailov/azure-devops-versioning.git main --quiet
+          git push https://kanailov:$(PAToken)@github.com/Kanailov/azure-devops-versioning.git main --quiet     # sending changes to remote repository
