@@ -83,22 +83,16 @@ steps:
     configuration: '$(buildConfiguration)'
 
 - task: PowerShell@2
-  displayName: 'Version Update to master'
+  displayName: 'Version Update to main'
       # вторая часть - сборка успешно завершена - записываем номер версии в репозиторий
   inputs:
     targetType: 'inline'
     script: |
-          echo echo_checkout_master
-          git checkout master --quiet
-
-          echo echo_pull_master
+          git checkout main --quiet
           git pull --quiet
 
-          echo echo_merge_test
           git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr" --quiet
          
-          echo echo_delete_test_branch
           git branch -d DevOps/test_$(Build.BuildNumber)
 
-          echo echo_push
           git push https://Personal%20Access%20Token:$(AntonKPAT)@github.com/Kanailov/azure-devops-versioning.git main --quiet
