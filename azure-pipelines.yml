@@ -15,13 +15,7 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-      # this step is required to be able to push changes back 
-#- checkout: self
-#  persistCredentials: true
-#  clean: true
-
 - task: NuGetToolInstaller@1
-
 - task: NuGetCommand@2
   inputs:
     restoreSolution: '$(solution)'
