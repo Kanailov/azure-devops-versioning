@@ -66,9 +66,9 @@ steps:
             }
           }
 
-          echo echo_add_file
+          git config user.email "azure.agent@profinfotech.ru" 
+          git config user.name "Azure Agent"
           git add $projectName 
-          echo echo_commit
           git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"
 - task: VSBuild@1
   inputs:
