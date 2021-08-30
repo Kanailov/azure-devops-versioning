@@ -33,7 +33,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-          $projectName = '.\azure-devops-versioning.csproj\azure-devops-versioning.csproj'
+          $projectName = '.\azure-devops-versioning\azure-devops-versioning.csproj'
 
           git --version
           git --html-path
