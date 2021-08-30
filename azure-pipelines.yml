@@ -1,0 +1,104 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+      # следующий шаг нужен для возможности пушить изменения обратно 
+- checkout: self
+  persistCredentials: true
+  clean: true
+
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: PowerShell@2
+  displayName: 'Assembly Version Generation'
+  # первая часть - установка номера версии. если сборка упадет,
+  # версия не должна быть записана в репозиторий
+  inputs:
+    targetType: 'inline'
+    script: |
+          $projectName = '.\azure-devops-versioning.csproj\azure-devops-versioning.csproj'
+
+          git --version
+          git --html-path
+          git branch DevOps/test_$(Build.BuildNumber) --quiet
+          git checkout DevOps/test_$(Build.BuildNumber) --quiet
+          git status
+
+          $data = foreach($str in Get-Content $projectName)  # Перибираем строки файла
+          {
+            if ($str -like '*<AssemblyVersion>*')  # Находим совпадение с AssemblyVersion
+            {
+              
+              $firstAssemblyIndex = $str.IndexOf('<AssemblyVersion>') # Находим количество пробелов
+              $str -match ('(<AssemblyVersion>)(.+)(</AssemblyVersion>)$') # Создаем массив переменных
+              $ver = $matches[2].split('.') # Убираем точки из версии
+              $ver[3] = ([int]$ver[3] + 1) # Прибавляем к версии 1
+              $newVerStr = $ver -join '.' # Обратно возвращаем точки в версии
+              $newStr = '{0}{1}{2}' -f $matches[1], $newVerStr, $matches[3] # Собираем обратно части записи
+              
+              for ($i=1; $i -le $firstAssemblyIndex; $i++){ # Добавляем пробелы
+              $newStr = '{0}{1}' -f (' '), $newStr
+              }
+              Write-Host $newStr
+              
+              (Get-Content $projectName) -replace $str,$newStr | Set-Content $projectName
+            }
+            else
+            {
+              $str
+            }
+          }
+
+          echo echo_add_file
+          git add $projectName 
+          echo echo_commit
+          git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"
+- task: VSBuild@1
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: PowerShell@2
+  displayName: 'Version Update to master'
+      # вторая часть - сборка успешно завершена - записываем номер версии в репозиторий
+  inputs:
+    targetType: 'inline'
+    script: |
+          echo echo_checkout_master
+          git checkout master --quiet
+
+          echo echo_pull_master
+          git pull --quiet
+
+          echo echo_merge_test
+          git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr" --quiet
+         
+          echo echo_delete_test_branch
+          git branch -d DevOps/test_$(Build.BuildNumber)
+
+          echo echo_push
+          git push https://Personal%20Access%20Token:$(AntonKPAT)@github.com/Kanailov/azure-devops-versioning.git main --quiet
