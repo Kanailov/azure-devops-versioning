@@ -52,7 +52,7 @@ steps:
           git config user.email "azure.agent@profinfotech.ru"
           git config user.name "Azure Agent"
           git add $ProjectFile                  # indexing changed file
-          git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"         # commiting changed file with the comment
+          git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $NewVersion"         # commiting changed file with the comment
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
@@ -61,7 +61,7 @@ steps:
     configuration: '$(buildConfiguration)'
 
 - task: PowerShell@2
-  displayName: 'Version Update to main'
+  displayName: 'Send new version to main'
       # second part - build was successful - sending new version to the repository
   inputs:
     targetType: 'inline'
@@ -69,7 +69,7 @@ steps:
           git checkout main --quiet         # switching to main
           git pull --quiet                  # getting fresh version of main
 
-          git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr" --quiet     # merging local branch with main
+          git merge DevOps/test_$(Build.BuildNumber) -m "[skip ci] Pipeline Modification: AssemblyVersion = $NewVersion" --quiet     # merging local branch with main
          
           git branch -d DevOps/test_$(Build.BuildNumber)    # deleting local branch
 
