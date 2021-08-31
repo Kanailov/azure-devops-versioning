@@ -51,7 +51,7 @@ steps:
 
           git config user.email "azure.agent@profinfotech.ru"
           git config user.name "Azure Agent"
-          git add $projectName                  # indexing changed file
+          git add $ProjectFile                  # indexing changed file
           git commit -m "[skip ci] Pipeline Modification: AssemblyVersion = $newVerStr"         # commiting changed file with the comment
 - task: VSBuild@1
   inputs:
