@@ -29,11 +29,8 @@ steps:
     script: |
           $ProjectFile = '.\azure-devops-versioning\azure-devops-versioning.csproj'
 
-          git --version
-          git --html-path
           git branch DevOps/test_$(Build.BuildNumber) --quiet
           git checkout DevOps/test_$(Build.BuildNumber) --quiet
-          git status
 
           foreach($line in Get-Content -Path $ProjectFile) 
           {$AssemblyVersionLine = $line | Select-String -Pattern '<AssemblyVersion>' -CaseSensitive
